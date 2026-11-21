@@ -385,6 +385,8 @@ function Citation({ n, h, reading, open, staff, marks }) {
   };
   const [pg, setPg] = useState(first);
   const [total, setTotal] = useState(null);
+  const [pages, setPages] = useState(null); // OCR text of every page, for "อ่านทั้งหน้า"
+  const [full, setFull] = useState(false);
   const [pdfOk, setPdfOk] = useState(true);
   useEffect(() => {
     if (pdf) loadDoc();
@@ -395,6 +397,7 @@ function Citation({ n, h, reading, open, staff, marks }) {
         .then((r) => r.json())
         .then((d) => {
           setTotal(d.pages?.length || null);
+          setPages(d.pages || []);
           setPdfOk(d.pdf_local !== false);
         })
         .catch(() => {});
@@ -466,7 +469,7 @@ function Citation({ n, h, reading, open, staff, marks }) {
               <Icon className="h-4 w-4" /> {label}
             </button>
           ))}
-          {pdf && (
+          {(pdf || full) && (
             <div className="ml-auto flex items-center gap-1">
               <button
                 type="button"
@@ -519,10 +522,39 @@ function Citation({ n, h, reading, open, staff, marks }) {
           src={`/api/pdf?key=${encodeURIComponent(h.key)}#page=${pg}&view=FitH&navpanes=0`}
           className="block h-[75vh] min-h-[28rem] w-full border-0 bg-tint"
         />
+      ) : full && h.key ? (
+        <div className="px-4 py-4 sm:px-5">
+          <p className="mb-2 text-[13px] text-form-soft">ข้อความ OCR ทั้งหน้า {pg} · ส่วนที่อ้างมีพื้นสีส้ม · OCR อาจสะกดผิดบางคำ ตรวจตัวเลขกับ PDF</p>
+          <div className="max-w-[82ch] font-law text-[17px] leading-[1.85] whitespace-pre-line text-ink">
+            {pages == null ? (
+              <span className="text-ink-soft">กำลังโหลด…</span>
+            ) : (
+              <Highlight text={pages.find((x) => x.n === pg)?.text || "หน้านี้ไม่มีข้อความ"} needle={h.text} />
+            )}
+          </div>
+        </div>
       ) : (
         <blockquote className="write-in max-w-[82ch] px-4 py-4 font-law text-[17px] leading-[1.85] whitespace-pre-line text-ink sm:px-5">
           <Guided text={h.text} guide={h.guide} words={marks?.words} legal={marks?.legal} />
         </blockquote>
+      )}
+      {!pdf && h.key && (
+        <div className="px-4 pb-3 sm:px-5">
+          <button
+            type="button"
+            onClick={() => {
+              if (!full) {
+                setPg(first);
+                loadDoc();
+              }
+              setFull(!full);
+            }}
+            className="inline-flex min-h-10 items-center gap-1.5 border border-form px-3 text-[14px] font-medium text-form hover:bg-tint"
+          >
+            <BookOpenText className="h-4 w-4" aria-hidden="true" />
+            {full ? "ย่อเหลือเฉพาะส่วนที่อ้าง" : `อ่านทั้งหน้า ${first}`}
+          </button>
+        </div>
       )}
       <div className="flex flex-wrap items-center gap-x-5 gap-y-1 border-t border-rule bg-tint px-4 py-1.5 text-[14px] sm:px-5">
         <button
