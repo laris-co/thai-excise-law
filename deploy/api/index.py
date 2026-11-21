@@ -57,6 +57,8 @@ def spans(text, lo=60, hi=320):
 
 
 NONBEER = re.compile(r"(?:มิใช่|ไม่ใช่)สุราแช่ชนิดเบียร์")
+ASKS_IMPORT = re.compile(r"นำเข้า|หิ้ว|ติดตัว|ต่างประเทศ|import|ราชอาณาจักร", re.I)
+NOT_BEER_Q = re.compile(r"(?:ไม่ใช่|มิใช่|นอกจาก)(?:สุราแช่)?(?:ชนิด)?เบียร์")  # "สุราแช่ที่ไม่ใช่เบียร์" asks about the others
 ASKS_BEER = re.compile(r"เบียร์|\bbeers?\b|brew", re.I)
 
 
@@ -195,7 +197,12 @@ class Lite:
         return self._hits(asked, q, added, self.versions(ranked[:k * 2])[:k], mode, trace, T)
 
     def _hits(self, asked, q, added, top, mode, trace, T):
-        if ASKS_BEER.search(asked):  # a beer question: sections only about other drinks go last
+        import relations
+        for i, f in top:
+            f["applies_to"] = relations.applies_to(self.metas[i].get("title"), self.docs[i])
+        if not ASKS_IMPORT.search(q):  # not an import question: rules only about importing go last
+            top = [x for x in top if "นำเข้า" not in x[1]["applies_to"]] + [x for x in top if "นำเข้า" in x[1]["applies_to"]]
+        if ASKS_BEER.search(asked) and not NOT_BEER_Q.search(asked):  # a beer question: other-drink-only sections go last
             for i, f in top:
                 if non_beer(self.metas[i].get("title"), self.docs[i]):
                     f["non_beer"] = True
@@ -329,6 +336,7 @@ def slim(base, h):
     return {"id": h["id"], "doc_key": h.get("key"), "title": h.get("title"), "section": h.get("section") or None,
             "page": h.get("pages") or h.get("page"), "type": h.get("type"), "effective": h.get("effect") or None,
             "cancelled": h.get("cancelled") or (h.get("cancel") or None), "pdf": h.get("source_url"),
+            "repealed_by": h.get("repealed_by"), "amended_by": h.get("amended_by") or [], "applies_to": h.get("applies_to") or [],
             "scores": {k: h[k] for k in ("rerank", "cosine", "bm25", "match_q") if h.get(k) is not None},
             "text": h.get("text", ""), **links(base, h.get("key"))}
 

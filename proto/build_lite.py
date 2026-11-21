@@ -87,6 +87,8 @@ def main():
         d = dates.get(m.get("key"), {})
         m["effect"], m["cancel"] = d.get("effect", ""), d.get("cancel", "")
         metas.append(m)
+    import relations  # who repealed / amended whom, from the documents' own text
+    relations.apply(metas, relations.relations(got["ids"], got["documents"], metas, time.strftime("%Y-%m-%d")))
     with gzip.open(os.path.join(OUT, "data", "sections.json.gz"), "wt", encoding="utf-8") as f:
         json.dump({"collection": COLLECTION, "ids": got["ids"], "docs": got["documents"], "metas": metas}, f, ensure_ascii=False)
 
@@ -145,7 +147,7 @@ def main():
             step(f"  {j}/{len(qs)}")
     json.dump(pre, open(os.path.join(OUT, "data", "prebuilt.json"), "w", encoding="utf-8"), ensure_ascii=False)
 
-    for f in ("textnorm.py", "terms.py"):
+    for f in ("textnorm.py", "terms.py", "relations.py"):
         os.makedirs(os.path.join(OUT, "api", "_lib"), exist_ok=True)
         shutil.copy(os.path.join(HERE, f), os.path.join(OUT, "api", "_lib", f))
     step("done")

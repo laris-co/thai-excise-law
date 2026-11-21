@@ -388,10 +388,10 @@ function Citation({ n, h, reading, open, staff, marks }) {
   const [pg, setPg] = useState(first);
   const [total, setTotal] = useState(null);
   const [pages, setPages] = useState(null); // OCR text of every page, for "อ่านทั้งหน้า"
-  const [full, setFull] = useState(false);
+  const [full, setFull] = useState(true); // the whole page by default; the short quote is one tap away
   const [pdfOk, setPdfOk] = useState(true);
   useEffect(() => {
-    if (pdf) loadDoc();
+    loadDoc(); // page count for PDF, page text for the full-page view
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   function loadDoc() {
     if (total == null && h.key)
@@ -419,6 +419,14 @@ function Citation({ n, h, reading, open, staff, marks }) {
         </div>
         <Field label="ชื่อเอกสาร" className="flex-1">
           <span className="font-medium">{h.title}</span>
+          {h.applies_to?.length > 0 && (
+            <span className="mt-1 flex flex-wrap items-center gap-1.5 text-[13px]">
+              <span className="text-form-soft">ใช้กับ</span>
+              {h.applies_to.map((a) => (
+                <span key={a} className="border border-rule px-1.5 leading-5 text-ink">{a}</span>
+              ))}
+            </span>
+          )}
         </Field>
       </div>
       <div className="grid grid-cols-2 border-b border-rule sm:grid-cols-[1.3fr_0.7fr_1fr_1.4fr]">
@@ -451,6 +459,19 @@ function Citation({ n, h, reading, open, staff, marks }) {
               <Box checked={gone} tone={gone ? "stamp" : "form"} /> ยกเลิกแล้ว
             </span>
           </span>
+          {h.repealed_by && (
+            <span className="mt-1 block text-[13px] leading-5 text-stamp">
+              ยกเลิกโดย {h.repealed_by.title} (มีผล {thDate(h.repealed_by.effect)})
+            </span>
+          )}
+          {!h.repealed_by && h.amended_by?.length > 0 && (
+            <span className="mt-1 block text-[13px] leading-5 text-mark">
+              มีฉบับแก้ไข: {h.amended_by[0].title} (มีผล {thDate(h.amended_by[0].effect)}) ตรวจข้อความฉบับแก้ไขด้วย
+            </span>
+          )}
+          {h.effect && h.effect > today && (
+            <span className="mt-1 block text-[13px] leading-5 text-mark">ยังไม่มีผล จะมีผล {thDate(h.effect)}</span>
+          )}
         </Field>
       </div>
       {h.key && (

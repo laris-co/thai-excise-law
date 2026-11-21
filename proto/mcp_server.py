@@ -81,6 +81,7 @@ def _hit(h, text_chars=600):
         "id": h.get("id"), "doc_key": h.get("key"), "title": h.get("title"), "section": h.get("section") or None,
         "page": h.get("pages") or h.get("page"), "type": h.get("type"), "effective": h.get("effect") or None,
         "cancelled": h.get("cancel") or h.get("cancelled") or None, "pdf": h.get("source_url"),
+        "repealed_by": h.get("repealed_by"), "amended_by": h.get("amended_by") or [], "applies_to": h.get("applies_to") or [],
         "scores": {k: h[k] for k in ("rerank", "cosine", "bm25", "rrf") if k in h},
         "text": (h.get("text") or "")[:text_chars],
         **_links(h.get("key")),

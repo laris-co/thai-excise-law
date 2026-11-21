@@ -53,6 +53,14 @@ def main():
         group.setdefault(subject(r.get("title")), set()).add(r["key"])
     twins = {r["key"]: group[subject(r.get("title"))] for r in D}
     succ = successors(D)
+    # a document the corpus itself says was repealed (relations.py) is answered right by its repealer
+    import gzip
+    meta_path = os.path.join(os.path.dirname(HERE), "deploy", "data", "sections.json.gz")
+    repealer = {}
+    if os.path.exists(meta_path):
+        for m in json.load(gzip.open(meta_path, "rt", encoding="utf-8"))["metas"]:
+            if m.get("repealed_by"):
+                repealer[m["key"]] = m["repealed_by"]["key"]
     qs = json.load(open(os.path.join(HERE, "eval", "questions.json"), encoding="utf-8"))
     for q in qs:
         if succ.get(q.get("key")):
@@ -68,7 +76,10 @@ def main():
             continue
         keys = set()
         for k in (q.get("keys") or []) + ([q["key"]] if q.get("key") else []):
-            keys |= twins.get(k, {k})
+            seen = 0
+            while k and seen < 5:  # follow repeals to the document in force
+                keys |= twins.get(k, {k})
+                k, seen = repealer.get(k), seen + 1
         at = re.compile(q["accept_title"]) if q.get("accept_title") else None
         ok = any(s.get("key") in keys or bool(at and at.search(s.get("title") or "")) for s in r["sources"])
         c["right" if ok else "other"] += 1

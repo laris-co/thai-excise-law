@@ -370,7 +370,7 @@ function Rows({ items, info, hover, setHover, pick, score, max, color }) {
   );
 }
 
-/* how the words are cut: the index uses character trigrams; ICU (what relic5 uses,
+/* how the words are cut: the index uses character trigrams; ICU (what the browser's Intl.Segmenter uses,
    here through the browser's Intl.Segmenter) cuts real Thai words */
 function Tokens({ q, tri }) {
   const words = useMemo(() => {
