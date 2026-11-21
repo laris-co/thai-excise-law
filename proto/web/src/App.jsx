@@ -546,7 +546,7 @@ function Citation({ n, h, reading, open, staff, marks }) {
       {pdf && h.key && !pdfOk ? (
         <p className="px-4 py-6 text-[15px] text-ink sm:px-5">
           ไฟล์ PDF นี้ใหญ่เกินกว่าจะแสดงในหน้านี้ได้ ·{" "}
-          <a href={h.source_url} target="_blank" rel="noreferrer" className="font-medium text-form underline underline-offset-4">
+          <a href={h.source_url} rel="noreferrer" className="font-medium text-form underline underline-offset-4">
             เปิดต้นฉบับบนเว็บกรมสรรพสามิต หน้า {pg}
           </a>
         </p>
@@ -606,18 +606,16 @@ function Citation({ n, h, reading, open, staff, marks }) {
         </button>
         {h.key && (
           <a
-            href={`/api/pdf?key=${encodeURIComponent(h.key)}#page=${pdf ? pg : first}`}
-            target="_blank"
+            href={`#/pdf?key=${encodeURIComponent(h.key)}&page=${pdf ? pg : first}`}
             rel="noreferrer"
             className="inline-flex min-h-10 items-center gap-1.5 text-form underline decoration-rule underline-offset-4 hover:text-ink"
           >
-            <FileText className="h-4 w-4" /> เปิด PDF หน้า {pdf ? pg : first} ในแท็บใหม่ <ArrowUpRight className="h-3.5 w-3.5" />
+            <FileText className="h-4 w-4" /> เปิด PDF หน้า {pdf ? pg : first}  <ArrowUpRight className="h-3.5 w-3.5" />
           </a>
         )}
         {h.source_url && (
           <a
             href={h.source_url}
-            target="_blank"
             rel="noreferrer"
             className="inline-flex min-h-10 items-center gap-1.5 text-form underline decoration-rule underline-offset-4 hover:text-ink"
           >
@@ -947,12 +945,11 @@ function Reader({ hit, close, wide }) {
         <span className="hidden text-[13px] text-ink-soft sm:inline">{view === "text" ? "ค้นจากข้อความนี้ · อาจสะกดผิดบางคำ" : "ตรวจตัวเลขและเครื่องหมายกับหน้านี้"}</span>
         {doc?.pdf_local && (
           <a
-            href={`/api/pdf?key=${encodeURIComponent(doc.key)}#page=${page}`}
-            target="_blank"
+            href={`#/pdf?key=${encodeURIComponent(doc.key)}&page=${page}`}
             rel="noreferrer"
             className="ml-auto inline-flex min-h-10 shrink-0 items-center gap-1.5 text-[14px] font-medium text-form underline decoration-rule underline-offset-4 hover:text-ink"
           >
-            เปิด PDF ในแท็บใหม่ <ArrowUpRight className="h-3.5 w-3.5" />
+            เปิด PDF  <ArrowUpRight className="h-3.5 w-3.5" />
           </a>
         )}
       </div>
@@ -1043,7 +1040,6 @@ function Reader({ hit, close, wide }) {
         {hit.source_url && (
           <a
             href={hit.source_url}
-            target="_blank"
             rel="noreferrer"
             className="inline-flex min-h-9 items-center gap-1.5 font-medium text-form hover:text-ink"
           >
@@ -1070,6 +1066,7 @@ function useHash() {
 export default function App() {
   const h = useHash();
   if (h.startsWith("#/embed")) return <Chat embed />;
+  if (h.startsWith("#/pdf")) return <PdfPage />;
   // the full-page form is the main page (#/, old #/ask kept as an alias); no pop-up beside it
   if (h === "#/map" || h === "#/site")
     return (
@@ -1079,6 +1076,59 @@ export default function App() {
       </>
     );
   return <Chat />;
+}
+
+/* ---------- a PDF inside the app (#/pdf?key=…&page=N): no new window, Back returns ---------- */
+function PdfPage() {
+  const params = new URLSearchParams(window.location.hash.split("?")[1] || "");
+  const key = params.get("key") || "";
+  const page = Number(params.get("page")) || 1;
+  const [doc, setDoc] = useState(null);
+  useEffect(() => {
+    if (!/^\d+_\d+$/.test(key)) return;
+    fetch(`/api/doc?key=${encodeURIComponent(key)}`)
+      .then((r) => r.json())
+      .then(setDoc)
+      .catch(() => setDoc({ error: true }));
+  }, [key]);
+  const back = () => (window.history.length > 1 ? window.history.back() : (window.location.hash = "#/"));
+  return (
+    <div className="flex min-h-screen flex-col px-0 sm:px-6 sm:pb-6">
+      <Nav here="ask" wide />
+      <main className="mx-auto flex w-full max-w-[90rem] flex-1 flex-col border-form bg-sheet shadow-[0_2px_14px_rgb(20_40_30/0.10)] sm:border">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-rule bg-tint px-4 py-2 sm:px-6">
+          <button
+            type="button"
+            onClick={back}
+            className="inline-flex min-h-10 items-center gap-1 border border-form bg-sheet px-3 text-[14px] font-medium text-form hover:bg-tint"
+          >
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" /> กลับ
+          </button>
+          <span className="min-w-0 flex-1 text-[15px] font-medium text-ink">{doc?.title || key}</span>
+          <span className="tnum text-[13px] text-ink-soft">หน้า {page}</span>
+          {doc?.source_url && (
+            <a href={doc.source_url} rel="noreferrer" className="text-[14px] text-form underline decoration-rule underline-offset-4 hover:text-ink">
+              ต้นฉบับบนเว็บกรมสรรพสามิต
+            </a>
+          )}
+        </div>
+        {doc && doc.pdf_local === false ? (
+          <p className="p-6 text-[15px] text-ink">
+            ไฟล์ PDF นี้ใหญ่เกินกว่าจะแสดงในหน้านี้ได้ ·{" "}
+            <a href={doc.source_url} rel="noreferrer" className="font-medium text-form underline underline-offset-4">
+              เปิดต้นฉบับบนเว็บกรมสรรพสามิต
+            </a>
+          </p>
+        ) : (
+          <iframe
+            title={`PDF ${doc?.title || key} หน้า ${page}`}
+            src={`/api/pdf?key=${encodeURIComponent(key)}#page=${page}&view=FitH&navpanes=0`}
+            className="block min-h-[80vh] w-full flex-1 border-0 bg-tint"
+          />
+        )}
+      </main>
+    </div>
+  );
 }
 
 /* ---------- answers live in the URL ---------- */

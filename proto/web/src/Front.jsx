@@ -124,8 +124,7 @@ function Facts({ ask }) {
             <div className="flex items-center justify-between gap-2 border-t border-rule px-4 py-2 text-[13px] leading-5">
               <span className="min-w-0 text-ink-soft">{f.src}</span>
               <a
-                href={`/api/pdf?key=${f.key}#page=${f.page}`}
-                target="_blank"
+                href={`#/pdf?key=${f.key}&page=${f.page}`}
                 rel="noreferrer"
                 className="inline-flex shrink-0 items-center gap-1 font-medium text-form underline decoration-rule underline-offset-4 hover:text-ink"
               >
@@ -166,8 +165,7 @@ function Library() {
           {(latest?.docs || []).map((d) => (
             <li key={d.key}>
               <a
-                href={`/api/pdf?key=${d.key}#page=1`}
-                target="_blank"
+                href={`#/pdf?key=${d.key}&page=1`}
                 rel="noreferrer"
                 className="group flex items-start gap-3 py-2.5 hover:bg-tint/40"
               >

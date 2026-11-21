@@ -520,7 +520,7 @@ function Picked({ id, info, close }) {
         )}
       </div>
       {sec?.url && (
-        <a href={sec.url} target="_blank" rel="noreferrer" className="flex min-h-10 items-center gap-1.5 border-t border-rule px-4 text-[14px] text-form hover:text-ink">
+        <a href={sec.url} rel="noreferrer" className="flex min-h-10 items-center gap-1.5 border-t border-rule px-4 text-[14px] text-form hover:text-ink">
           <ExternalLink className="h-3.5 w-3.5" /> PDF ต้นฉบับ
         </a>
       )}
