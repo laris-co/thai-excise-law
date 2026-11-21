@@ -394,8 +394,13 @@ function Editor({ me }) {
       .split(" ")
       .slice(0, 2)
       .join(" ");
-    let i = el.value.indexOf(probe);
-    if (i < 0) i = el.value.indexOf(probe.split(" ")[0]);
+    // "ขอ 1" must not stop at "ขอ 16": a number in the probe has to end where the probe ends
+    const at = (p) => {
+      const m = new RegExp(p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + (/[0-9]$/.test(p) ? "(?![0-9])" : "")).exec(el.value);
+      return m ? m.index : -1;
+    };
+    let i = at(probe);
+    if (i < 0) i = at(probe.split(" ")[0]);
     if (i < 0) return;
     el.focus();
     el.setSelectionRange(i, i + probe.length);

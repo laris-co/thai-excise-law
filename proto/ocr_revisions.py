@@ -15,7 +15,7 @@ import sys
 import urllib.request
 
 PROJECT = sys.argv[sys.argv.index("--project") + 1] if "--project" in sys.argv else os.environ.get("FIREBASE_PROJECT", "thai-excise-law")
-CORPUS = os.path.expanduser(os.environ.get("EXCISE_CORPUS", "$EXCISE_CORPUS"))
+CORPUS = os.path.expanduser(os.environ.get("EXCISE_CORPUS", "excise-laws"))
 DRY = "--dry" in sys.argv
 
 

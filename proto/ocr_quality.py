@@ -27,7 +27,7 @@ import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-CORPUS = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("--") else os.environ.get("EXCISE_CORPUS", "$EXCISE_CORPUS"))
+CORPUS = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("--") else os.environ.get("EXCISE_CORPUS", "excise-laws"))
 ARGS, sys.argv = sys.argv[1:], [sys.argv[0], CORPUS]  # paths.py reads the corpus from argv[1]
 sys.path.insert(0, HERE)
 import paths  # noqa: E402
