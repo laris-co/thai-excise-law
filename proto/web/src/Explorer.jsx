@@ -386,15 +386,15 @@ function Tokens({ q, tri }) {
     <div className="mt-1.5 text-[13px] leading-6">
       <div className="text-form-soft">ตัดคำแบบ ICU (คำไทยจริง {thai(words.length)} คำ · ใช้เปรียบเทียบเท่านั้น)</div>
       <div className="flex flex-wrap gap-1">{words.map((w, i) => <span key={i} className={chip}>{w}</span>)}</div>
-      <div className="mt-1 text-form-soft">ตัดแบบ trigram ที่ดัชนีใช้จริง ({thai(tri.length)} ชิ้น ทีละ ๓ ตัวอักษร เลื่อนทีละตัว)</div>
-      <div className="flex flex-wrap gap-1">
-        {(open ? tri : tri.slice(0, 18)).map((w) => <span key={w} className={`${chip} text-ink-soft`}>{w}</span>)}
-        {tri.length > 18 && (
-          <button type="button" onClick={() => setOpen((o) => !o)} className="text-form underline underline-offset-2">
-            {open ? "ย่อ" : `+${thai(tri.length - 18)}`}
-          </button>
-        )}
-      </div>
+      {/* the trigram cut is a detail for staff: hidden until asked for */}
+      <button type="button" onClick={() => setOpen((o) => !o)} className="mt-1 text-form underline decoration-rule underline-offset-2 hover:text-ink">
+        {open ? "ซ่อนการตัดแบบ trigram" : `ดูการตัดแบบ trigram ที่ดัชนีใช้ (${thai(tri.length)} ชิ้น)`}
+      </button>
+      {open && (
+        <div className="mt-1 flex flex-wrap gap-1">
+          {tri.map((w) => <span key={w} className={`${chip} text-ink-soft`}>{w}</span>)}
+        </div>
+      )}
     </div>
   );
 }
