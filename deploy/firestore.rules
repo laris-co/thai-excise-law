@@ -1,0 +1,37 @@
+rules_version = '2';
+// OCR review back office (proto/web/src/Admin.jsx). Only invited Google accounts may read or write.
+//   reviewers/{email}        role: "admin" | "reviewer"   (admins invite and remove reviewers)
+//   docs/{key}               pages: { "<n>": "approved" | "fixed" }   (queue progress)
+//   pages/{key}_{n}          the current reviewed text of one page
+//   pages/{key}_{n}/revs/*   every save; append-only, never edited or deleted
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function signedIn() { return request.auth != null && request.auth.token.email_verified == true; }
+    function me() { return request.auth.token.email.lower(); }
+    function reviewer() { return signedIn() && exists(/databases/$(db)/documents/reviewers/$(me())); }
+    function admin() { return reviewer() && get(/databases/$(db)/documents/reviewers/$(me())).data.role == 'admin'; }
+    function byMe() { return request.resource.data.by == me(); }
+    function okStatus() { return request.resource.data.status in ['approved', 'fixed']; }
+
+    match /reviewers/{email} {
+      allow read: if signedIn() && (email == me() || reviewer());
+      allow create, update: if admin() && request.resource.data.role in ['admin', 'reviewer'];
+      allow delete: if admin() && email != me();
+    }
+    match /docs/{key} {
+      allow read: if reviewer();
+      allow write: if reviewer();
+    }
+    match /pages/{id} {
+      allow read: if reviewer();
+      allow create, update: if reviewer() && byMe() && okStatus() && request.resource.data.text is string
+                            && request.resource.data.text.size() < 200000;
+      allow delete: if false;
+      match /revs/{rev} {
+        allow read: if reviewer();
+        allow create: if reviewer() && byMe() && okStatus();
+        allow update, delete: if false;
+      }
+    }
+  }
+}

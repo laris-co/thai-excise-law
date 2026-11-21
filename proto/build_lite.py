@@ -129,6 +129,12 @@ def main():
         if j % 100 == 0:
             step(f"  {j}/{len(keys)}")
 
+    step("OCR quality scores (review queue)")
+    qp = os.path.join(os.path.dirname(os.path.expanduser(os.environ.get("EXCISE_MANIFEST", os.path.join(os.environ.get("EXCISE_CORPUS", "excise-laws"), "manifest.jsonl")))),
+                      "vec", "ocr_quality.json")
+    if os.path.exists(qp):
+        shutil.copy(qp, os.path.join(pub, "data", "ocr_quality.json"))
+
     step("map")
     json.dump(get("/api/map"), open(os.path.join(pub, "data", "map.json"), "w", encoding="utf-8"), ensure_ascii=False,
               separators=(",", ":"))

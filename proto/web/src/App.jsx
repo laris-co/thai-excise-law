@@ -1,5 +1,6 @@
 import Front from "./Front.jsx";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+const Admin = lazy(() => import("./Admin.jsx")); // reviewers only; Firebase stays out of the members' bundle
 import Explorer from "./Explorer.jsx";
 import Nav from "./Nav.jsx";
 import ChatWidget from "./ChatWidget.jsx";
@@ -1065,6 +1066,12 @@ function useHash() {
 
 export default function App() {
   const h = useHash();
+  if (h.startsWith("#/admin"))
+    return (
+      <Suspense fallback={<p className="p-8 text-ink-soft">กำลังโหลด</p>}>
+        <Admin />
+      </Suspense>
+    );
   if (h.startsWith("#/embed")) return <Chat embed />;
   if (h.startsWith("#/pdf")) return <PdfPage />;
   // the full-page form is the main page (#/, old #/ask kept as an alias); no pop-up beside it

@@ -571,6 +571,11 @@ class Handler(BaseHTTPRequestHandler):
                                     "rerank": bool(self.index.reranker),
                                     "docs": len({m["doc_id"] for m in self.index.metas}),
                                     "embed_dims": embed_ok(), "model": MODEL})
+        if u.path == "/data/ocr_quality.json":  # per-page OCR scores for the review queue (proto/ocr_quality.py)
+            qp = os.path.join(os.path.dirname(MANIFEST), "vec", "ocr_quality.json")
+            if not os.path.exists(qp):
+                return self._send(404, {"error": "not built: python proto/ocr_quality.py"})
+            return self._send(200, open(qp, "rb").read(), "application/json; charset=utf-8")
         if u.path == "/api/pdf":  # the original PDF, served from the local copy so the reader can show it inline
             path = self.index.pdf_path((qs.get("key") or [""])[0])
             if not path:

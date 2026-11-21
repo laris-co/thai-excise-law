@@ -77,8 +77,18 @@ def ocr_dir(key):
     return hits[-1] if hits else None
 
 
+REVISED = os.path.join(CORPUS if os.path.isdir(CORPUS) else os.path.expanduser(os.environ.get("EXCISE_CORPUS", "excise-laws")), "revised")  # reviewer-corrected pages (proto/ocr_revisions.py pull), same file names
+
+
 def pages_in(d):
-    return {int(re.search(r"(\d+)", os.path.basename(p)).group(1)): p for p in glob.glob(os.path.join(d, "page_*.txt"))} if d else {}
+    out = {int(re.search(r"(\d+)", os.path.basename(p)).group(1)): p for p in glob.glob(os.path.join(d, "page_*.txt"))} if d else {}
+    base = os.path.basename(d or "")
+    if out and base.startswith("excise-"):  # an OCR folder: a reviewed page replaces the machine's text
+        for p in glob.glob(os.path.join(REVISED, base[len("excise-"):], "page_*.txt")):
+            n = int(re.search(r"(\d+)", os.path.basename(p)).group(1))
+            if n in out:
+                out[n] = p
+    return out
 
 
 # ---------------------------------------------------------------- text
