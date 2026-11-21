@@ -321,11 +321,13 @@ function Ask({ q, setQ, ask, busy, first, compact = false, embedExamples = false
 
 /* ---------- guide marks: which words and which sentence answer the question ---------- */
 
-const STOP = new Set("ไหม ที่ ได้ ไม่ อะไร อย่างไร ยังไง ต้อง มี เป็น การ ของ และ หรือ กับ ใน จะ ให้ ก็ คือ บ้าง เท่าไร เท่าไหร่ ไหน ครับ ค่ะ คะ นะ แล้ว ถ้า ว่า ซึ่ง โดย จาก แต่ ทำ เอง ครั้ง เดียว หมด ไป มา อยู่ ต่อ ยัง ทุก กี่ ใคร เมื่อ ตอน ช่วย บอก อยาก รู้".split(" "));
+const STOP = new Set("นี้ นั้น ตอนนี้ ตอนนั้น ไหม ที่ ได้ ไม่ อะไร อย่างไร ยังไง ต้อง มี เป็น การ ของ และ หรือ กับ ใน จะ ให้ ก็ คือ บ้าง เท่าไร เท่าไหร่ ไหน ครับ ค่ะ คะ นะ แล้ว ถ้า ว่า ซึ่ง โดย จาก แต่ ทำ เอง ครั้ง เดียว หมด ไป มา อยู่ ต่อ ยัง ทุก กี่ ใคร เมื่อ ตอน ช่วย บอก อยาก รู้".split(" "));
+// Thai letters only: vowel and tone marks above/below do not count, so "นี้" is 1 letter, not 3
+const letters = (w) => w.replace(/[\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]/g, "").length;
 function askedWords(q) {
   try {
     const seg = new Intl.Segmenter("th", { granularity: "word" });
-    return [...new Set([...seg.segment(q)].filter((x) => x.isWordLike && x.segment.length >= 3 && !STOP.has(x.segment)).map((x) => x.segment))];
+    return [...new Set([...seg.segment(q)].filter((x) => x.isWordLike && letters(x.segment) >= 3 && !STOP.has(x.segment)).map((x) => x.segment))];
   } catch {
     return [];
   }
@@ -738,7 +740,7 @@ function Turn({ n, t, reading, open, staff, ask, embed }) {
         <>
           {r.expanded?.length > 0 && (
             <div className="px-5 pt-4 sm:px-8">
-              <Label n={2}>คำในกฎหมายที่ใช้ค้นเพิ่ม</Label>
+              <Label n={embed ? 1 : 2}>คำในกฎหมายที่ใช้ค้นเพิ่ม</Label>
               <p className="write-in mt-1 text-[15px] leading-7 text-ink">
                 {r.expanded.map((w, i) => (
                   <span key={w}>
@@ -751,7 +753,7 @@ function Turn({ n, t, reading, open, staff, ask, embed }) {
           )}
           {r.answered ? (
             <div className="px-5 py-4 sm:px-8">
-              <Label n={r.expanded?.length ? 3 : 2}>ข้อความจากเอกสาร ({thai(r.sources.length)} รายการ เรียงฉบับที่ใช้บังคับล่าสุดก่อน)</Label>
+              <Label n={(r.expanded?.length ? 3 : 2) - (embed ? 1 : 0)}>ข้อความจากเอกสาร ({thai(r.sources.length)} รายการ เรียงฉบับที่ใช้บังคับล่าสุดก่อน)</Label>
               <GuideKey any={r.sources.some((h) => h.guide) || found.length > 0 || r.expanded?.length > 0} />
               <div className="mt-3 space-y-4">
                 {r.sources.map((h, i) => (

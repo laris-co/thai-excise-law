@@ -148,6 +148,9 @@ function MapCanvas({ map, trace, stage, hover, setHover, pick, picked }) {
       g.fillRect(x - r0 / 2, y - r0 / 2, r0, r0);
     }
     g.globalAlpha = 1;
+    // the question marker never leaves the map: clamped to the edge (16 px in), and its lines start there
+    const qx = qpos ? Math.min(size.w - 16, Math.max(16, sx(qpos[0]))) : 0;
+    const qy = qpos ? Math.min(size.h - 16, Math.max(16, sy(qpos[1]))) : 0;
     if (roles && qpos && (stage === "all" || stage === "final")) {
       g.save();
       g.setLineDash([4, 4]);
@@ -158,7 +161,7 @@ function MapCanvas({ map, trace, stage, hover, setHover, pick, picked }) {
         g.strokeStyle = h.pass ? STAGE_INK.final : FAIL_INK;
         g.globalAlpha = h.pass ? 0.85 : 0.45;
         g.beginPath();
-        g.moveTo(sx(qpos[0]), sy(qpos[1]));
+        g.moveTo(qx, qy);
         g.lineTo(sx(pts[i][1]), sy(pts[i][2]));
         g.stroke();
       }
@@ -207,7 +210,7 @@ function MapCanvas({ map, trace, stage, hover, setHover, pick, picked }) {
       }
     }
     if (qpos) {
-      const x = sx(qpos[0]), y = sy(qpos[1]);
+      const x = qx, y = qy;
       g.strokeStyle = "#1a1d1b";
       g.lineWidth = 2;
       g.beginPath();

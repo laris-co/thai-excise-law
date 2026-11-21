@@ -37,7 +37,11 @@ Result 2026-11-21 (both transports): 5 tools listed; three search modes return h
 answers the licence-fee question (ใบอนุญาตผลิตสุราแช่ชนิดเบียร์ ประเภทที่ 1 ฉบับละ 60,000 บาท, 748 ms)
 and refuses the IPA-hops question; `find_pdf "ค่าธรรมเนียม ใบอนุญาต"` finds 4 documents with links.
 
-## OCR quality (OpenThai, 814 documents, 6,640 pages)
+## OCR quality (OpenThai)
+
+Counted over every OCR run at the time (814 runs, 6,640 pages: some documents were OCR'd more than once).
+The indexed corpus is **773 documents, 5,897 pages** (one OCR run per document; 805 PDFs in the manifest,
+of which 773 have OCR text that `paths.docs()` keeps) and 14,383 ข้อ/มาตรา sections.
 
 - Clean text: on the sampled pages 93% Thai characters, no stray symbols, no split ำ, no orphan marks.
 - Known faults, counted over all pages:
