@@ -34,7 +34,7 @@ import paths  # noqa: E402
 
 THAI_DIG = "๐๑๒๓๔๕๖๗๘๙"
 NUM_LOST = re.compile(r"(?:มาตรา|ข้อ|ฉบับที่|หมวด|ส่วนที่|บัญชีที่|ตอนที่|แบบ ภส\.)\s+(?=[ก-ฮเแโใไ])(?!ให้|ทั้ง|นี้|ดัง|ใด|ที่|และ|หรือ|ตาม|เป็น|ว่า|ก่อน)")
-HEADING = re.compile(r"(?m)^\s*(?:ขอ|ข้อ\.|ช้อ|ซ้อ|ข้อํ)\s*[๐-๙0-9]")
+HEADING = re.compile(r"(?m)^\s*(?:ขอ|ข้อ\.|ช้อ|ซ้อ|ข้อํ)\s*[๐-๙0-9]+")
 # a mark (above/below vowel or tone) not preceded by a consonant or another mark, or two tone marks in a row
 MARKS = re.compile(r"(?<![ก-ฮัิ-ฺ็-๎])[ัิ-ฺ็-๎]|[่-๋]{2,}")
 ODD = re.compile(r"[^฀-๿A-Za-z0-9\s.,:;()\[\]\"'“”‘’/\-–—_%&+=*#@!?<>|$฿…•·°§~^]")
