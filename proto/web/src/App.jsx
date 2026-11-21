@@ -380,7 +380,8 @@ function Citation({ n, h, reading, open, staff, marks }) {
   const active = reading === h.id;
   const first = Number(String(pageLabel(h)).split("-")[0]) || 1;
   // the original PDF page is the default view (members trust the printed page); the choice is remembered
-  const [pdf, setPdfState] = useState(() => Boolean(h.key) && (localStorage.getItem("cardView") || "pdf") === "pdf");
+  // the whole document's text is the default view (cited part highlighted); the original PDF is one tap away
+  const [pdf, setPdfState] = useState(() => Boolean(h.key) && localStorage.getItem("cardView") === "pdf");
   const setPdf = (on) => {
     setPdfState(on);
     localStorage.setItem("cardView", on ? "pdf" : "text");
@@ -388,7 +389,18 @@ function Citation({ n, h, reading, open, staff, marks }) {
   const [pg, setPg] = useState(first);
   const [total, setTotal] = useState(null);
   const [pages, setPages] = useState(null); // OCR text of every page, for "อ่านทั้งหน้า"
-  const [full, setFull] = useState(true); // the whole page by default; the short quote is one tap away
+  const [full, setFull] = useState(true); // the whole document by default; the short quote is one tap away
+  const last = Number(String(pageLabel(h)).split("-")[1]) || first;
+  const fullBox = useRef(null);
+  // open on the cited passage, and follow the page picker
+  useEffect(() => {
+    const box = fullBox.current;
+    if (!box || pages == null) return;
+    const mark = box.querySelector("mark[data-cited]");
+    const sec = box.querySelector(`[data-page="${pg}"]`);
+    const target = pg === first && mark ? mark : sec;
+    if (target) box.scrollTop += target.getBoundingClientRect().top - box.getBoundingClientRect().top - 24;
+  }, [pages, pg, full, pdf]); // eslint-disable-line react-hooks/exhaustive-deps
   const [pdfOk, setPdfOk] = useState(true);
   useEffect(() => {
     loadDoc(); // page count for PDF, page text for the full-page view
@@ -546,13 +558,18 @@ function Citation({ n, h, reading, open, staff, marks }) {
           className="block h-[75vh] min-h-[28rem] w-full border-0 bg-tint"
         />
       ) : full && h.key ? (
-        <div className="px-4 py-4 sm:px-5">
-          <p className="mb-2 text-[13px] text-form-soft">ข้อความ OCR ทั้งหน้า {pg} · ส่วนที่อ้างมีพื้นสีส้ม · OCR อาจสะกดผิดบางคำ ตรวจตัวเลขกับ PDF</p>
+        <div ref={fullBox} className="max-h-[75vh] overflow-y-auto px-4 py-4 sm:px-5">
+          <p className="mb-2 text-[13px] text-form-soft">ข้อความ OCR ทั้งฉบับ ({total || "…"} หน้า) · ส่วนที่อ้างมีพื้นสีส้ม · OCR อาจสะกดผิดบางคำ ตรวจตัวเลขกับ PDF</p>
           <div className="max-w-[82ch] font-law text-[17px] leading-[1.85] whitespace-pre-line text-ink">
             {pages == null ? (
               <span className="text-ink-soft">กำลังโหลด…</span>
             ) : (
-              <Highlight text={pages.find((x) => x.n === pg)?.text || "หน้านี้ไม่มีข้อความ"} needle={h.text} />
+              pages.map((x) => (
+                <section key={x.n} data-page={x.n} className="mb-5">
+                  <p className="tnum mb-1 border-b border-rule/60 font-ui text-[13px] font-medium text-form-soft">หน้า {x.n}</p>
+                  {x.n >= first && x.n <= last ? <Highlight text={x.text || ""} needle={h.text} /> : x.text}
+                </section>
+              ))
             )}
           </div>
         </div>
@@ -575,7 +592,7 @@ function Citation({ n, h, reading, open, staff, marks }) {
             className="inline-flex min-h-10 items-center gap-1.5 border border-form px-3 text-[14px] font-medium text-form hover:bg-tint"
           >
             <BookOpenText className="h-4 w-4" aria-hidden="true" />
-            {full ? "ย่อเหลือเฉพาะส่วนที่อ้าง" : `อ่านทั้งหน้า ${first}`}
+            {full ? "ย่อเหลือเฉพาะส่วนที่อ้าง" : "อ่านทั้งฉบับ"}
           </button>
         </div>
       )}
