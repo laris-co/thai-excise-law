@@ -270,7 +270,7 @@ function MapCanvas({ map, trace, stage, hover, setHover, pick, picked }) {
       <canvas
         ref={cvs}
         style={{ width: size.w, height: size.h }}
-        className="block cursor-crosshair touch-none bg-sheet"
+        className={`block touch-none bg-sheet ${hover != null ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"}`}
         role="img"
         aria-label={`แผนที่ ${num(pts.length)} ข้อ/ส่วน จัดวางตามความหมาย`}
         onPointerDown={(e) => {
@@ -367,7 +367,7 @@ function Rows({ items, info, hover, setHover, pick, score, max, color }) {
   );
 }
 
-/* how the words are cut: the index uses character trigrams; ICU (what the browser's Intl.Segmenter uses,
+/* how the words are cut: the index uses character trigrams; ICU (what relic5 uses,
    here through the browser's Intl.Segmenter) cuts real Thai words */
 function Tokens({ q, tri }) {
   const words = useMemo(() => {

@@ -66,7 +66,12 @@
   summary,
   select,
   label[for],
-  [role="button"] {
+  label:has(input),
+  input[type="checkbox"],
+  input[type="radio"],
+  [role="button"],
+  [role="tab"],
+  [onclick] {
     cursor: pointer;
   }
   button:disabled,
