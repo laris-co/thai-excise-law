@@ -708,10 +708,7 @@ function Turn({ n, t, reading, open, staff, ask, embed }) {
         {n === 1 && (
           <button
             type="button"
-            onClick={() => {
-              if (window.location.hash.startsWith("#/answer")) window.history.back();
-              else window.dispatchEvent(new Event("go-home"));
-            }}
+            onClick={() => window.dispatchEvent(new Event("go-home"))}
             className="inline-flex min-h-9 items-center gap-1 text-[14px] font-medium text-form underline decoration-rule underline-offset-4 hover:text-ink"
           >
             <ChevronLeft className="h-4 w-4" aria-hidden="true" /> หน้าแรก · เลือกเรื่องอื่น
@@ -1044,50 +1041,89 @@ export default function App() {
   return <Chat />;
 }
 
+/* ---------- answers live in the URL ---------- */
+function urlQs() {
+  const h = window.location.hash;
+  if (!h.startsWith("#/answer")) return [];
+  return new URLSearchParams(h.split("?")[1] || "").getAll("q").filter(Boolean);
+}
+function answerHash(qs) {
+  return "#/answer?" + qs.map((q) => "q=" + encodeURIComponent(q)).join("&");
+}
+function cachedAnswer(q) {
+  try {
+    return JSON.parse(sessionStorage.getItem("answers") || "{}")[q] || null;
+  } catch {
+    return null;
+  }
+}
+async function fetchAnswer(q, embed) {
+  let r;
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ q, compare: true, src: embed ? "popup" : "web" }),
+    });
+    r = res.ok ? await res.json() : { error: `server ${res.status}` };
+  } catch (e) {
+    r = { error: String(e) };
+  }
+  if (!r.error) {
+    try {
+      const all = JSON.parse(sessionStorage.getItem("answers") || "{}");
+      all[q] = r;
+      const keys = Object.keys(all);
+      if (keys.length > 30) delete all[keys[0]]; // keep the newest 30
+      sessionStorage.setItem("answers", JSON.stringify(all));
+    } catch {
+      /* storage full or blocked: memory only */
+    }
+  }
+  return r;
+}
+
 function Chat({ embed = false }) {
   const [q, setQ] = useState("");
   // the conversation survives closing the pop-up, reloads and switching to the full page (same tab)
-  const [turns, setTurns] = useState(() => {
-    try {
-      return JSON.parse(sessionStorage.getItem("turns") || "[]").filter((t) => t.r);
-    } catch {
-      return [];
-    }
-  });
-  // back to the first page: the nav tab / brand (already on #/) and the button on every answer send "go-home"
+  // The URL is the source of truth for what is on screen: #/answer?q=…&q=… (one q per question, in order).
+  // Every question pushes a URL, so Back/Forward step through the questions, a reload keeps them and a link
+  // opens the same answers. Answers are cached per question in sessionStorage; only missing ones are asked.
+  const [turns, setTurns] = useState(() => (embed ? [] : urlQs().map((q) => ({ q, r: cachedAnswer(q) }))));
+  const turnsRef = useRef(turns);
+  turnsRef.current = turns;
   useEffect(() => {
-    const home = () => {
-      setTurns([]);
+    if (embed) return undefined;
+    const sync = () => {
+      const qs = urlQs();
       setReading(null);
-      window.scrollTo({ top: 0 });
+      if (!qs.length) {
+        setTurns([]);
+        window.scrollTo({ top: 0 });
+        return;
+      }
+      const old = turnsRef.current;
+      const next = qs.map((q, i) => (old[i] && old[i].q === q && old[i].r ? old[i] : { q, r: cachedAnswer(q) }));
+      setTurns(next);
+      next.forEach((t, i) => {
+        if (!t.r) fetchAnswer(t.q, embed).then((r) => setTurns((cur) => cur.map((x, j) => (j === i && x.q === t.q ? { ...x, r } : x))));
+      });
+    };
+    sync(); // a reload or a shared link: ask whatever is not cached yet
+    window.addEventListener("hashchange", sync);
+    window.addEventListener("popstate", sync);
+    // the nav tab, the brand and the button on an answer: go to the first page (a new URL, so Back returns)
+    const home = () => {
+      if (urlQs().length) window.history.pushState(null, "", "#/");
+      sync();
     };
     window.addEventListener("go-home", home);
-    // Back from #/answer (or the nav to #/) lands on the first page: drop the answers
-    const onHash = () => {
-      const h = window.location.hash;
-      if (!embed && (h === "" || h === "#/" || h === "#/ask")) {
-        try {
-          sessionStorage.removeItem("turns");
-        } catch {
-          /* storage blocked */
-        }
-        home();
-      }
-    };
-    window.addEventListener("hashchange", onHash);
     return () => {
+      window.removeEventListener("hashchange", sync);
+      window.removeEventListener("popstate", sync);
       window.removeEventListener("go-home", home);
-      window.removeEventListener("hashchange", onHash);
     };
   }, [embed]);
-  useEffect(() => {
-    const done = turns.filter((t) => t.r && !t.r.error);
-    try {
-      sessionStorage.setItem("turns", JSON.stringify(done.slice(-20)));
-    } catch {
-      /* storage full or blocked: keep it in memory only */
-    }
-  }, [turns]);
   const [busy, setBusy] = useState(false);
   const [health, setHealth] = useState(null);
   const [staff, setStaff] = useState(() => localStorage.getItem("staff") === "1");
@@ -1121,21 +1157,10 @@ function Chat({ embed = false }) {
       setQ("");
       setBusy(true);
       const idx = turns.length;
-      // the first answer gets its own history entry (#/answer), so the browser's Back returns to the first page
-      if (!embed && idx === 0 && !window.location.hash.startsWith("#/answer")) window.history.pushState(null, "", "#/answer");
+      if (!embed) window.history.pushState(null, "", answerHash([...turns.map((t) => t.q), question]));
       setTurns((t) => [...t, { q: question, r: null }]);
       const slow = setTimeout(() => setTurns((t) => t.map((x, i) => (i === idx ? { ...x, slow: true } : x))), 4000);
-      let r;
-      try {
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ q: question, compare: true, src: embed ? "popup" : "web" }),
-        });
-        r = res.ok ? await res.json() : { error: `server ${res.status}` };
-      } catch (e) {
-        r = { error: String(e) };
-      }
+      const r = cachedAnswer(question) || (await fetchAnswer(question, embed));
       clearTimeout(slow);
       setTurns((t) => t.map((x, i) => (i === idx ? { ...x, r } : x)));
       setBusy(false);
