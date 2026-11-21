@@ -708,7 +708,10 @@ function Turn({ n, t, reading, open, staff, ask, embed }) {
         {n === 1 && (
           <button
             type="button"
-            onClick={() => window.dispatchEvent(new Event("go-home"))}
+            onClick={() => {
+              if (window.location.hash.startsWith("#/answer")) window.history.back();
+              else window.dispatchEvent(new Event("go-home"));
+            }}
             className="inline-flex min-h-9 items-center gap-1 text-[14px] font-medium text-form underline decoration-rule underline-offset-4 hover:text-ink"
           >
             <ChevronLeft className="h-4 w-4" aria-hidden="true" /> หน้าแรก · เลือกเรื่องอื่น
@@ -1059,8 +1062,24 @@ function Chat({ embed = false }) {
       window.scrollTo({ top: 0 });
     };
     window.addEventListener("go-home", home);
-    return () => window.removeEventListener("go-home", home);
-  }, []);
+    // Back from #/answer (or the nav to #/) lands on the first page: drop the answers
+    const onHash = () => {
+      const h = window.location.hash;
+      if (!embed && (h === "" || h === "#/" || h === "#/ask")) {
+        try {
+          sessionStorage.removeItem("turns");
+        } catch {
+          /* storage blocked */
+        }
+        home();
+      }
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => {
+      window.removeEventListener("go-home", home);
+      window.removeEventListener("hashchange", onHash);
+    };
+  }, [embed]);
   useEffect(() => {
     const done = turns.filter((t) => t.r && !t.r.error);
     try {
@@ -1102,6 +1121,8 @@ function Chat({ embed = false }) {
       setQ("");
       setBusy(true);
       const idx = turns.length;
+      // the first answer gets its own history entry (#/answer), so the browser's Back returns to the first page
+      if (!embed && idx === 0 && !window.location.hash.startsWith("#/answer")) window.history.pushState(null, "", "#/answer");
       setTurns((t) => [...t, { q: question, r: null }]);
       const slow = setTimeout(() => setTurns((t) => t.map((x, i) => (i === idx ? { ...x, slow: true } : x))), 4000);
       let r;
