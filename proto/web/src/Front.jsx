@@ -231,21 +231,6 @@ function How() {
   );
 }
 
-function Hero() {
-  return (
-    <figure className="relative mx-5 mb-2 overflow-hidden border border-rule bg-[#fbf8f1] sm:mx-8">
-      <img
-        src="/img/hero.jpg"
-        alt="ภาพประกอบ: หม้อต้มทองแดงและถังหมักของโรงเบียร์ ขวดเบียร์และแก้วเบียร์ หนังสือกฎหมายเปิดอยู่ ตราประทับ และแว่นขยาย"
-        width="1800"
-        height="600"
-        className="block aspect-[3/1] w-full object-cover"
-      />
-      <figcaption className="absolute right-2 bottom-1.5 bg-sheet/85 px-1.5 text-[11px] text-ink-soft">ภาพประกอบวาดด้วย AI</figcaption>
-    </figure>
-  );
-}
-
 export default function Front({ ask }) {
   return (
     <>
