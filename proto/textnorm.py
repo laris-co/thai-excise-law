@@ -20,7 +20,7 @@ def normalize(text: str) -> str:
     t = re.sub(f"{NIKHAHIT}([{THAI_TONES}]?)\\s?{SARA_AA}", f"\\1{SARA_AM}", t)
     t = re.sub(f"([{THAI_TONES}]){NIKHAHIT}{SARA_AA}", f"\\1{SARA_AM}", t)
     t = t.translate(THAI_DIGITS)
-    t = re.sub(r"[ \t ​]+", " ", t)
+    t = re.sub(r"[ \t\u00a0\u200b]+", " ", t)  # space, tab, no-break space, zero-width space
     t = re.sub(r" *\n *", "\n", t)
     t = re.sub(r"\n{3,}", "\n\n", t)
     return t.strip()
