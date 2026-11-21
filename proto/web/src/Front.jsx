@@ -75,19 +75,9 @@ function Topics({ ask }) {
   return (
     <section aria-labelledby="topics-h" className="px-5 pt-2 pb-6 sm:px-8">
       <div className="flex items-end justify-between gap-6">
-        <Heading note="แตะคำถาม ระบบจะตอบพร้อมหน้าเอกสารจริง">
+        <Heading note="แตะคำถาม ระบบจะตอบพร้อมหน้าเอกสารจริง · ภาพประกอบวาดด้วย AI">
           <span id="topics-h">เลือกเรื่องที่อยากรู้</span>
         </Heading>
-        <figure className="relative mb-3 hidden shrink-0 md:block">
-          <img
-            src="/img/hero.jpg"
-            alt="ภาพประกอบ: โรงเบียร์ ขวดเบียร์ แก้วเบียร์ หนังสือกฎหมาย ตราประทับ และแว่นขยาย"
-            width="360"
-            height="120"
-            className="block h-[120px] w-[360px] border border-rule/60 object-cover"
-          />
-          <figcaption className="absolute right-1 bottom-0.5 bg-sheet/85 px-1 text-[10px] text-ink-soft">ภาพประกอบวาดด้วย AI</figcaption>
-        </figure>
       </div>
       <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {TOPICS.map(({ title, img, qs }) => (
