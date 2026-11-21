@@ -1,0 +1,20 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "outputDirectory": "public",
+  "functions": {
+    "api/index.py": {
+      "includeFiles": "{data/**,api/_lib/**}",
+      "maxDuration": 30,
+      "memory": 1024
+    }
+  },
+  "rewrites": [
+    { "source": "/api/doc", "has": [{ "type": "query", "key": "key", "value": "(?<k>\\d+_\\d+)" }], "destination": "/data/doc/:k.json" },
+    { "source": "/api/map", "destination": "/data/map.json" },
+    { "source": "/mcp", "destination": "/api/index?p=/mcp" },
+    { "source": "/api/:path((?!index).*)", "destination": "/api/index?p=/api/:path" }
+  ],
+  "headers": [
+    { "source": "/data/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600, s-maxage=86400" }] }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "thai-excise-law": {
+      "type": "http",
+      "url": "https://thai-excise-law.vercel.app/mcp"
+    },
+    "thai-excise-law-local": {
+      "command": "uv",
+      "args": ["run", "-q", "--with", "mcp<2", "python", "proto/mcp_server.py"],
+      "env": { "CRAFT_API": "http://127.0.0.1:8796" }
+    }
+  }
+}

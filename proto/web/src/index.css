@@ -1,0 +1,144 @@
+@import "tailwindcss";
+@import "@fontsource/ibm-plex-sans-thai/thai-400.css";
+@import "@fontsource/ibm-plex-sans-thai/latin-400.css";
+@import "@fontsource/ibm-plex-sans-thai/thai-500.css";
+@import "@fontsource/ibm-plex-sans-thai/latin-500.css";
+@import "@fontsource/ibm-plex-sans-thai/thai-600.css";
+@import "@fontsource/ibm-plex-sans-thai/latin-600.css";
+@import "@fontsource/sarabun/thai-400.css";
+@import "@fontsource/sarabun/latin-400.css";
+@import "@fontsource/sarabun/thai-500.css";
+@import "@fontsource/sarabun/latin-500.css";
+
+/* World: a Thai government form (แบบฟอร์มราชการ). Printed parts in form-green ink,
+   what the search filled in is ink-black, quoted law is set in Sarabun like the Gazette,
+   amber marks only the citation being read, stamp-red only cancelled / not found. */
+@theme {
+  --font-ui: "IBM Plex Sans Thai", "Noto Sans Thai", "Thonburi", system-ui, sans-serif;
+  --font-law: "Sarabun", "TH Sarabun New", "Noto Serif Thai", serif;
+
+  --color-desk: #cfdad3;      /* the desk the sheet lies on */
+  --color-sheet: #ffffff;     /* bond paper */
+  --color-tint: #dbe8df;      /* printed field tint */
+  --color-rule: #8fa596;      /* printed hairlines */
+  --color-form: #174d34;      /* form print ink */
+  --color-form-soft: #2c5240; /* small printed labels, 8.6:1 on white */
+  --color-ink: #111412;       /* filled-in entries */
+  --color-ink-soft: #2f3431;  /* secondary entries, 12.6:1 */
+  --color-mark: #9a4d00;      /* amber: the citation being read */
+  --color-mark-wash: #fbd99a; /* highlighter on the cited passage */
+  --color-stamp: #a3302a;     /* rubber stamp red */
+  --color-guide: #ffe45c;     /* highlighter: the span that answers the question best */
+  --color-asked: #1450b0;     /* the member's own words, underlined where they appear */
+}
+
+@layer base {
+  html {
+    font-family: var(--font-ui);
+    color: var(--color-ink);
+    background: var(--color-desk);
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-bottom: 7rem; /* the sticky question field never covers what is being read */
+    scrollbar-color: var(--color-rule) transparent;
+    text-decoration-skip-ink: none; /* Thai marks would otherwise break every underline into pieces */
+  }
+  body {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.7;
+  }
+  ::selection {
+    background: var(--color-mark-wash);
+    color: var(--color-ink);
+  }
+  input,
+  textarea {
+    caret-color: var(--color-form);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-form);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  /* anything clickable shows the hand; disabled shows it cannot be used */
+  a[href],
+  button,
+  summary,
+  select,
+  label[for],
+  [role="button"] {
+    cursor: pointer;
+  }
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* the dotted writing line every Thai form prints under a field */
+.dotline {
+  background-image: radial-gradient(circle, var(--color-rule) 1px, transparent 1.4px);
+  background-size: 6px 6px;
+  background-position: 0 100%;
+  background-repeat: repeat-x;
+}
+
+/* entries arrive the way a pen fills a field: left to right */
+@keyframes write-in {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+.write-in {
+  animation: write-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes stamp {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.stamp-in {
+  animation: stamp 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes sheet-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.sheet-in {
+  animation: sheet-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes pulse-line {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+.pending {
+  animation: pulse-line 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .write-in,
+  .stamp-in,
+  .sheet-in,
+  .pending {
+    animation: none;
+  }
+}

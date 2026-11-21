@@ -1,0 +1,22 @@
+# private audio and derived binaries stay local (never on GitHub)
+*.m4a
+*.wav
+*.mp3
+*.npy
+*.units.json
+audio_feat.json
+viz/
+__pycache__/
+
+# chatbot prototype: local vector store and build output
+proto/.chroma/
+proto/web/node_modules/
+proto/web/dist/
+
+# impeccable review captures and decision pages stay local
+.impeccable/
+proto/.map/
+proto/.logs/
+deploy/data/
+deploy/public/
+deploy/.vercel/
